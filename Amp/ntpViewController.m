@@ -1,0 +1,75 @@
+//
+//  ntpViewController.m
+//  Amp
+//
+//  Created by Kenny Okagaki on 11/23/15.
+//  Copyright (c) 2015 CS144. All rights reserved.
+//
+
+#import "ntpViewController.h"
+
+@interface ntpViewController () {
+    
+    NetworkClock *                  netClock;
+    NetAssociation *                netAssociation;
+    
+}
+
+@end
+
+@implementation ntpViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    netClock = [NetworkClock sharedNetworkClock];
+    NSLog(@"NTP SYNC BEGIN");
+    
+    /*┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+     │ Create a timer that will fire every second to refresh the text labels in the UI.                 │
+     └──────────────────────────────────────────────────────────────────────────────────────────────────┘*/
+    NSTimer * repeatingTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:1.0]
+                                                        interval:0.5
+                                                          target:self
+                                                        selector:@selector(timerFireMethod:)
+                                                        userInfo:nil
+                                                         repeats:YES];
+    
+    /*┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+     │ Add the repeating timer to the run-loop.                                                         │
+     └──────────────────────────────────────────────────────────────────────────────────────────────────┘*/
+    [[NSRunLoop currentRunLoop] addTimer:repeatingTimer
+                                 forMode:NSDefaultRunLoopMode];
+    
+}
+
+/*┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ ┃ The method executed by the timer -- gets the latest times and displays them.                     ┃
+ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛*/
+- (void) timerFireMethod:(NSTimer *) theTimer {
+    _sysClockLabel.text = [NSString stringWithFormat:@"System Clock: %@", [NSDate date]];
+    _netClockLabel.text = [NSString stringWithFormat:@"Network Clock: %@", netClock.networkTime];
+    _offsetLabel.text = [NSString stringWithFormat:@"Clock Offet (mS): %5.3f", netClock.networkOffset * 1000.0];
+}
+
+
+/*┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ ┃ Gets a single NetAssociation and tells it to get the time from its server.                       ┃
+ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛*/
+- (IBAction) timeCheck:(id)sender {
+    NSLog(@"Time Check");
+    netAssociation = [[NetAssociation alloc] initWithServerName:@"time.apple.com"];
+    netAssociation.delegate = self;
+    [netAssociation sendTimeQuery];
+}
+
+/*┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+ ┃ Called when that single NetAssociation has a network time to report.                             ┃
+ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛*/
+- (void) reportFromDelegate {
+    _timeCheckLabel.text = [NSString stringWithFormat:@"System ahead by (secs): %5.3f",
+                            netAssociation.offset];
+}
+
+@end
+

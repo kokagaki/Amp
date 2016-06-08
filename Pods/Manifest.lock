@@ -1,0 +1,14 @@
+PODS:
+  - CocoaAsyncSocket (7.4.2)
+  - ios-ntp (1.1.1):
+    - CocoaAsyncSocket (~> 7.4.1)
+
+DEPENDENCIES:
+  - CocoaAsyncSocket
+  - ios-ntp (= 1.1.1)
+
+SPEC CHECKSUMS:
+  CocoaAsyncSocket: f5783bdedd232d91b89769bc4b5a1580aed518ad
+  ios-ntp: 5f2f4fecf0432169b358eb3b564f12b94157108f
+
+COCOAPODS: 0.39.0
